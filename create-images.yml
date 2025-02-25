@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  msvc-integrator-service:
+    image: msvc-integrator-service:latest
+    build:
+      context: msvc-integrator-service
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+
+  msvc-medical-record:
+    image: msvc-medical-record:latest
+    build:
+      context: msvc-medical-record
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
