@@ -171,3 +171,5 @@ cython_debug/
 .pypirc
 
 **.idea/
+
+postgres/k8s/config.yaml
