@@ -1,105 +1,31 @@
-import json
-import logging
+from flask import Flask, jsonify
+from prometheus_flask_exporter import PrometheusMetrics
 import os
-import re
-
-from flask import Flask, request, jsonify
-import pika
-import time
+from src.handlers.lab_result_handler import LabResultHandler
+from src.config import Config
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Ruta para recibir resultados de laboratorio
+@app.route('/api/lab-results', methods=['POST'])
+@metrics.counter('lab_results_received', 'Number of lab results received')
+def process_lab_results():
+    return LabResultHandler().handle_request()
 
-# RabbitMQ connection parameters
-RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'rabbitmq')
+# Endpoint de salud
+@app.route('/health/live', methods=['GET'])
+def liveness():
+    return jsonify({"status": "ok", "service": "msvc-integrator-service"}), 200
 
-# Handle the case where RABBITMQ_PORT is a URL
-rabbitmq_port_env = os.environ.get('RABBITMQ_PORT', '5672')
-# Check if it's a URL and extract just the port number if needed
-if '://' in rabbitmq_port_env:
-    match = re.search(r':(\d+)$', rabbitmq_port_env)
-    RABBITMQ_PORT = int(match.group(1)) if match else 5672
-else:
-    RABBITMQ_PORT = int(rabbitmq_port_env)
-
-RABBITMQ_USER = os.environ.get('RABBITMQ_USER', 'guest')
-RABBITMQ_PASS = os.environ.get('RABBITMQ_PASS', 'guest')
-QUEUE_NAME = os.environ.get('QUEUE_NAME', 'message_queue')
-
-
-def get_rabbitmq_connection():
-    retry_count = 0
-    max_retries = 5
-
-    while retry_count < max_retries:
-        try:
-            credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
-            parameters = pika.ConnectionParameters(
-                host=RABBITMQ_HOST,
-                port=RABBITMQ_PORT,
-                credentials=credentials,
-                heartbeat=600
-            )
-            connection = pika.BlockingConnection(parameters)
-            logger.info("Successfully connected to RabbitMQ")
-            return connection
-        except pika.exceptions.AMQPConnectionError as e:
-            retry_count += 1
-            wait_time = 5 * retry_count
-            logger.warning(f"Failed to connect to RabbitMQ, retrying in {wait_time}s... ({retry_count}/{max_retries})")
-            time.sleep(wait_time)
-
-    logger.error("Failed to connect to RabbitMQ after maximum retries")
-    raise Exception("Could not connect to RabbitMQ")
-
-
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({"status": "healthy"}), 200
-
-
-@app.route('/send', methods=['POST'])
-def send_message():
-    if not request.is_json:
-        return jsonify({"error": "Request must be JSON"}), 400
-
-    message = request.get_json()
-
+@app.route('/health/ready', methods=['GET'])
+def readiness():
     try:
-        # Establish connection to RabbitMQ
-        connection = get_rabbitmq_connection()
-        channel = connection.channel()
-
-        # Declare queue
-        channel.queue_declare(queue=QUEUE_NAME, durable=True)
-
-        # Publish message
-        channel.basic_publish(
-            exchange='',
-            routing_key=QUEUE_NAME,
-            body=json.dumps(message),
-            properties=pika.BasicProperties(
-                delivery_mode=2,  # make message persistent
-                content_type='application/json'
-            )
-        )
-
-        connection.close()
-        logger.info(f"Message sent to queue: {QUEUE_NAME}")
-
-        return jsonify({
-            "status": "success",
-            "message": "Message sent to queue",
-            "queue": QUEUE_NAME
-        }), 200
-
+        # Aquí podríamos verificar la conexión a RabbitMQ
+        return jsonify({"status": "ok", "service": "msvc-integrator-service"}), 200
     except Exception as e:
-        logger.error(f"Error sending message: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
+        app.logger.error(f"Readiness check failed: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 503
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

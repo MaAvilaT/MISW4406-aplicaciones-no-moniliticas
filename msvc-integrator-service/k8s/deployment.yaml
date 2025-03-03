@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: msvc-integrator-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: msvc-integrator-service
+  template:
+    metadata:
+      labels:
+        app: msvc-integrator-service
+    spec:
+      containers:
+      - name: msvc-integrator-service
+        image: us-central1-docker.pkg.dev/uniandes-apps-no-monoliticas/misw4406-neoliticas-image-repo/msvc-integrator-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        - name: GUNICORN_WORKERS
+          value: "4"
+        - name: GUNICORN_THREADS
+          value: "2"
+        - name: RABBITMQ_HOST
+          value: "rabbitmq-service"
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: username
+        - name: RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: password
+#        resources:
+#          requests:
+#            memory: "256Mi"
+#            cpu: "200m"
+#          limits:
+#            memory: "512Mi"
+#            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 20

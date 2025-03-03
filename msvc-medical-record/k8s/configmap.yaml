@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: msvc-medical-record-config
+data:
+  rabbitmq_host: "rabbitmq-service"
+  rabbitmq_port: "5672"
+  rabbitmq_user: "guest"
+  rabbitmq_pass: "guest"
+  rabbitmq_queue: "MSVC_INTEGRATOR_process_lab_test_result"

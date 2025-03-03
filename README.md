@@ -38,123 +38,77 @@ Create the following directory structure:
 
 ```bash
 minikube start
+#minikube ssh
+#docker images
+
+./deploy-all.sh
 ```
 
-### 2. Enable the Minikube Docker environment
+You must configure a DB instance, and define a file (probably called `config.yaml`)
+like the following one at the directory `postgres/k8s`:
 
-```bash
-eval $(minikube docker-env)
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+stringData:
+  username: '?'
+  password: '?'
+  database: '?'
+  host: '?'
+  port: '?'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  POSTGRES_SSL_MODE: 'require'
+  POSTGRES_CONNECTION_TIMEOUT: '30'
+  POSTGRES_POOL_SIZE: '10'
 ```
 
-This allows Minikube to use locally built Docker images.
+This works for local development, if you wish to deploy to real env, you need to
+define the artifact registry repo for the docker images, push them, and create a svc
+account in GCP or your cloud provider to grant access to the pods in your cluster
+to the images.
 
-### 3. Build the Docker images
-
-```bash
-# Build producer image
-cd ./msvc-integrator-service
-docker build -t msvc-integrator-service:latest .
-
-# Build consumer image
-cd ../msvc-medical-record
-docker build -t msvc-medical-record:latest .
-```
-
-### 4. Deploy to Kubernetes
+### Sending a test message
 
 ```bash
-cd ..
-kubectl apply -f deploy-all.yaml
-```
-
-### 5. Check deployment status
-
-```bash
-kubectl get pods
-```
-
-Wait until all pods show `Running` status.
-
-## Testing the Application
-
-### 1. Get service URLs
-
-```bash
-minikube service msvc-integrator-service --url
-minikube service msvc-medical-record --url
-```
-
-Save these URLs for testing.
-
-### 2. Send a test message to the producer
-
-Using curl (replace with the actual producer URL):
-
-```bash
-curl -X POST \
-  "$(minikube service msvc-integrator-service --url)/send" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "message_id": "123",
-    "content": "Test message",
-    "timestamp": "2025-02-24T12:00:00Z",
-    "priority": "high"
+curl -X POST "$(minikube service msvc-integrator-service --url)/api/lab-results" \
+-H 'Content-Type: application/json' \
+-d '{
+    "lab_id": "lab_123456",
+    "lab_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsYWJfaWQiOiJsYWJfMTIzNDU2In0.sample_token",
+    "lab_document": {
+        "test_info": {
+            "test_type": "Blood Analysis",
+            "test_date": "2024-03-14T10:30:00Z",
+            "collected_by": "Dr. Smith"
+        },
+        "results": {
+            "hemoglobin": {
+                "value": 14.5,
+                "unit": "g/dL",
+                "reference_range": "13.5-17.5"
+            },
+            "white_blood_cells": {
+                "value": 7500,
+                "unit": "cells/µL",
+                "reference_range": "4500-11000"
+            },
+            "platelets": {
+                "value": 250000,
+                "unit": "platelets/µL",
+                "reference_range": "150000-450000"
+            }
+        },
+        "conclusions": "All values within normal range"
+    },
+    "patient_uuid": "pat_789012"
 }'
-```
-
-### 3. Check received messages in the consumer
-
-Using curl (replace with the actual consumer URL):
-
-```bash
-curl "$(minikube service msvc-medical-record --url)/messages"
-```
-
-You should see the message you sent via the producer.
-
-### 4. Access RabbitMQ Management Interface
-
-```bash
-# Port forward RabbitMQ management console
-kubectl port-forward service/rabbitmq 15672:15672
-```
-
-Open your browser and navigate to `http://localhost:15672/`
-- Username: guest
-- Password: guest
-
-Here you can monitor queues, messages, and other RabbitMQ metrics.
-
-### 5. Clean up
-
-When you're done testing:
-
-```bash
-kubectl delete -f deploy-all.yml
-minikube stop
-```
-
-## Advanced Tests
-
-### Send multiple messages
-
-```bash
-for i in {1..5}; do
-  curl -X POST \
-    http://$(minikube service producer --url)/send \
-    -H 'Content-Type: application/json' \
-    -d "{
-      \"message_id\": \"$i\",
-      \"content\": \"Test message $i\",
-      \"timestamp\": \"2025-02-24T12:00:00Z\",
-      \"priority\": \"medium\"
-    }"
-  echo ""
-done
-```
-
-### Clear message history
-
-```bash
-curl -X POST http://$(minikube service consumer --url)/clear
 ```

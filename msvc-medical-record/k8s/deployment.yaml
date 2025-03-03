@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: msvc-medical-record
+  labels:
+    app: msvc-medical-record
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: msvc-medical-record
+  template:
+    metadata:
+      labels:
+        app: msvc-medical-record
+    spec:
+      containers:
+      - name: msvc-medical-record
+        image: us-central1-docker.pkg.dev/uniandes-apps-no-monoliticas/misw4406-neoliticas-image-repo/msvc-medical-record:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        - name: RABBITMQ_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: msvc-medical-record-config
+              key: rabbitmq_host
+        - name: RABBITMQ_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: msvc-medical-record-config
+              key: rabbitmq_port
+        - name: RABBITMQ_USER
+          valueFrom:
+            configMapKeyRef:
+              name: msvc-medical-record-config
+              key: rabbitmq_user
+        - name: RABBITMQ_PASS
+          valueFrom:
+            configMapKeyRef:
+              name: msvc-medical-record-config
+              key: rabbitmq_pass
+        - name: RABBITMQ_QUEUE
+          valueFrom:
+            configMapKeyRef:
+              name: msvc-medical-record-config
+              key: rabbitmq_queue
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: host
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: port
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: database
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+          requests:
+            cpu: "250m"
+            memory: "800Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
