@@ -7,24 +7,11 @@ logger = logging.getLogger(__name__)
 
 
 class LabTestRepository:
-    """Repository for managing lab tests in the database"""
 
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
     def save(self, lab_id, lab_token, lab_document, patient_uuid):
-        """
-        Save a lab test result to the database
-
-        Args:
-            lab_id: SHA256 hash identifying the lab
-            lab_token: JWT or API Key for the lab
-            lab_document: JSON object with lab test data
-            patient_uuid: SHA256 hash identifying the patient
-
-        Returns:
-            The created lab test record
-        """
         try:
             session: Session = self.session_factory()
 

@@ -1,29 +1,27 @@
 import json
-from datetime import datetime
+from src.services.rabbitmq_service import RabbitMQService
+import threading
 
 
-class LabResultSubmittedEvent:
-    """
-    Evento que se produce cuando se envía un resultado de laboratorio correctamente.
-    Siguiendo el patrón CQS, este evento no modifica el estado, solo lo representa.
-    """
+class LabResultsBatchSubmittedEvent:
 
-    def __init__(self, lab_id, patient_uuid, message_id=None):
-        self.lab_id = lab_id
-        self.patient_uuid = patient_uuid
-        self.message_id = message_id
-        self.timestamp = datetime.utcnow().isoformat()
+    _instance = None
+    _lock = threading.Lock()  # Thread safety for Singleton initialization
 
-    def to_dict(self):
-        """Convierte el evento a un diccionario."""
-        return {
-            "event_type": "lab_result_submitted",
-            "lab_id": self.lab_id,
-            "patient_uuid": self.patient_uuid,
-            "message_id": self.message_id,
-            "timestamp": self.timestamp
-        }
+    def __new__(cls, *args, **kwargs):
+        """Ensure only one instance exists"""
+        if not cls._instance:
+            with cls._lock:
+                if not cls._instance:
+                    cls._instance = super(LabResultsBatchSubmittedEvent, cls).__new__(cls)
+                    cls._instance.__init_once()  # Call custom init method
+        return cls._instance
 
-    def to_json(self):
-        """Convierte el evento a JSON."""
-        return json.dumps(self.to_dict())
+    def __init_once(self):
+        self.rabbitmq_service = RabbitMQService()
+
+    def publish_to_queue(self, queue_data):
+        # Publish the message to RabbitMQ
+        message_id = self.rabbitmq_service.publish_message(json.dumps(queue_data))
+
+        return message_id

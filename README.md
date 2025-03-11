@@ -1,6 +1,5 @@
 # MISW4406-aplicaciones-no-moniliticas
 
-
 # Kubernetes (minikube) setup
 
 This guide explains how to set up and test the RabbitMQ producer and consumer applications in Minikube.
@@ -78,37 +77,25 @@ to the images.
 
 ### Sending a test message
 
-```bash
-curl -X POST "$(minikube service msvc-integrator-service --url)/api/lab-results" \
--H 'Content-Type: application/json' \
--d '{
-    "lab_id": "lab_123456",
-    "lab_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsYWJfaWQiOiJsYWJfMTIzNDU2In0.sample_token",
-    "lab_document": {
-        "test_info": {
-            "test_type": "Blood Analysis",
-            "test_date": "2024-03-14T10:30:00Z",
-            "collected_by": "Dr. Smith"
-        },
-        "results": {
-            "hemoglobin": {
-                "value": 14.5,
-                "unit": "g/dL",
-                "reference_range": "13.5-17.5"
-            },
-            "white_blood_cells": {
-                "value": 7500,
-                "unit": "cells/µL",
-                "reference_range": "4500-11000"
-            },
-            "platelets": {
-                "value": 250000,
-                "unit": "platelets/µL",
-                "reference_range": "150000-450000"
-            }
-        },
-        "conclusions": "All values within normal range"
-    },
-    "patient_uuid": "pat_789012"
-}'
-```
+Use the postman collection.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

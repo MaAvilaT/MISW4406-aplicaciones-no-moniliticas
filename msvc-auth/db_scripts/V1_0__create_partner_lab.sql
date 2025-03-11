@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS partner_lab (
+    id VARCHAR PRIMARY KEY,
+    lab_id VARCHAR NOT NULL,
+    lab_token VARCHAR NOT NULL
+);

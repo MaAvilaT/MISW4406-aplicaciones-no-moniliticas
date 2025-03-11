@@ -1,51 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: msvc-medical-record
+  name: msvc-auth
   labels:
-    app: msvc-medical-record
+    app: msvc-auth
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: msvc-medical-record
+      app: msvc-auth
   template:
     metadata:
       labels:
-        app: msvc-medical-record
+        app: msvc-auth
     spec:
       containers:
-      - name: msvc-medical-record
-        image: us-central1-docker.pkg.dev/uniandes-apps-no-monoliticas/misw4406-neoliticas-image-repo/msvc-medical-record:latest
+      - name: msvc-auth
+        image: us-central1-docker.pkg.dev/uniandes-apps-no-monoliticas/misw4406-neoliticas-image-repo/msvc-auth:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
         env:
-        - name: RABBITMQ_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: msvc-medical-record-config
-              key: rabbitmq_host
-        - name: RABBITMQ_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: msvc-medical-record-config
-              key: rabbitmq_port
-        - name: RABBITMQ_USER
-          valueFrom:
-            configMapKeyRef:
-              name: msvc-medical-record-config
-              key: rabbitmq_user
-        - name: RABBITMQ_PASS
-          valueFrom:
-            configMapKeyRef:
-              name: msvc-medical-record-config
-              key: rabbitmq_pass
-        - name: RABBITMQ_QUEUE
-          valueFrom:
-            configMapKeyRef:
-              name: msvc-medical-record-config
-              key: rabbitmq_queue
         - name: DB_HOST
           valueFrom:
             secretKeyRef:
@@ -60,7 +35,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: postgres-secret
-              key: medical-records-database
+              key: auth-database
         - name: DB_USER
           valueFrom:
             secretKeyRef:
@@ -72,12 +47,12 @@ spec:
               name: postgres-secret
               key: password
         resources:
-          limits:
-            cpu: "2"
-            memory: "2Gi"
           requests:
-            cpu: "1.6"
-            memory: "1800Mi"
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         livenessProbe:
           httpGet:
             path: /health

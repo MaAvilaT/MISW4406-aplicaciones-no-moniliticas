@@ -35,13 +35,18 @@ spec:
             secretKeyRef:
               name: rabbitmq-secret
               key: password
-#        resources:
-#          requests:
-#            memory: "256Mi"
-#            cpu: "200m"
-#          limits:
-#            memory: "512Mi"
-#            cpu: "500m"
+        - name: MSVC_AUTH_URL
+          valueFrom:
+            configMapKeyRef:
+              name: msvc-integrator-service-config
+              key: auth_url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         readinessProbe:
           httpGet:
             path: /health/ready
@@ -54,3 +59,9 @@ spec:
             port: 5000
           initialDelaySeconds: 15
           periodSeconds: 20
+        volumeMounts:
+          - name: logs
+            mountPath: /var/log/flask
+      volumes:
+        - name: logs
+          emptyDir: {}
