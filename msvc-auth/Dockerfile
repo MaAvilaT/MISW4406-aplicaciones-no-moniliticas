@@ -2,10 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN mkdir -p /var/log/flask
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    python3-dev
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --force-reinstall psycopg2-binary
 
 COPY . .
 

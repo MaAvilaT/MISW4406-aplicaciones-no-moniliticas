@@ -1,0 +1,56 @@
+{
+	"info": {
+		"_postman_id": "c54f1b55-0c6c-4c04-8970-397095e99a7c",
+		"name": "Final-experiment",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42996632"
+	},
+	"item": [
+		{
+			"name": "Solicitud de procesamiento",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "lab_id",
+						"value": "hands_on_hacking",
+						"type": "text"
+					},
+					{
+						"key": "lab_token",
+						"value": "hickey_&_arcuri",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"documents_batch\": [\n        {\n            \"patient_uuid\": \"pat_789012\",\n            \"test_info\": {\n                \"test_type\": \"Blood Analysis\",\n                \"test_date\": \"2024-03-14T10:30:00Z\",\n                \"collected_by\": \"Dr. Smith\"\n            },\n            \"results\": {\n                \"hemoglobin\": {\n                    \"value\": 14.5,\n                    \"unit\": \"g/dL\",\n                    \"reference_range\": \"13.5-17.5\"\n                },\n                \"white_blood_cells\": {\n                    \"value\": 7500,\n                    \"unit\": \"cells/µL\",\n                    \"reference_range\": \"4500-11000\"\n                },\n                \"platelets\": {\n                    \"value\": 250000,\n                    \"unit\": \"platelets/µL\",\n                    \"reference_range\": \"150000-450000\"\n                }\n            },\n            \"conclusions\": \"All values within normal range\"\n        }\n    ]\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "34.160.104.82/api/lab-results",
+					"host": [
+						"34",
+						"160",
+						"104",
+						"82"
+					],
+					"path": [
+						"api",
+						"lab-results"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

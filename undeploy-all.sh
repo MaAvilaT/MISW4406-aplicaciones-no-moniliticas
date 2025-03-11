@@ -2,6 +2,7 @@
 
 docker image rm -f msvc-integrator-service
 docker image rm -f msvc-medical-record
+docker image rm -f msvc-auth
 docker image prune -a -f
 
 
@@ -15,11 +16,13 @@ kubectl delete -f postgres/k8s/
 
 kubectl delete -f msvc-integrator-service/k8s/
 kubectl delete -f msvc-medical-record/k8s/
+kubectl delete -f msvc-auth/k8s/
 
 sleep 4
 
 docker image rm -f msvc-integrator-service
 docker image rm -f msvc-medical-record
+docker image rm -f msvc-auth
 
 docker image prune -a -f
 
